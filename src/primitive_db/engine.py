@@ -113,7 +113,7 @@ def execute_command(metadata, command):
     columns = metadata[table_name]
     if name == "info":
         print(f"Таблица: {table_name}")
-        print(f'Столбцы: {", ".join(columns)}')
+        print(f"Столбцы: {', '.join(columns)}")
         print(f"Количество записей: {len(rows)}")
     elif name == "select":
         result = core.select(rows, command["where"], columns=columns)
@@ -143,7 +143,7 @@ def execute_command(metadata, command):
                 save_table_data(table_name, result)
                 for record_id in record_ids:
                     print(
-                        f'Запись с ID={record_id} успешно удалена '
+                        f"Запись с ID={record_id} успешно удалена "
                         f'из таблицы "{table_name}".'
                     )
             else:
