@@ -2,7 +2,7 @@ import prompt
 from prettytable import PrettyTable
 
 from primitive_db import core
-from primitive_db.constants import META_FILE
+from primitive_db.constants import COMMAND_PROMPT, ID_COLUMN, META_FILE
 from primitive_db.decorators import handle_db_errors
 from primitive_db.parser import parse_command
 from primitive_db.utils import (
@@ -58,7 +58,7 @@ def _print_rows(rows, columns):
 def _matching_ids(rows, where_clause):
     """Сохраняет номера подходящих записей для сообщения о результате."""
     return [
-        row["ID"]
+        row[ID_COLUMN]
         for row in rows
         if all(
             type(row.get(field)) is type(value) and row.get(field) == value
@@ -102,7 +102,7 @@ def execute_command(metadata, command):
         result = core.insert(metadata, table_name, command["values"])
         if result is not None:
             save_table_data(table_name, result)
-            record_id = result[-1]["ID"]
+            record_id = result[-1][ID_COLUMN]
             print(
                 f'Запись с ID={record_id} успешно добавлена в таблицу "{table_name}".'
             )
@@ -133,7 +133,10 @@ def execute_command(metadata, command):
             else:
                 print("Записи для обновления не найдены.")
     elif name == "delete":
-        record_ids = _matching_ids(rows, command["where"])
+        matching_rows = core.select(rows, command["where"], columns=columns)
+        if matching_rows is None:
+            return
+        record_ids = [row[ID_COLUMN] for row in matching_rows]
         result = core.delete(rows, command["where"], columns=columns)
         if result is not None:
             if record_ids:
@@ -152,7 +155,10 @@ def run():
     welcome()
     while True:
         try:
-            command = parse_command(prompt.string("\n>>>Введите команду: "))
+            user_input = prompt.string(f"\n{COMMAND_PROMPT}", empty=True)
+            if user_input is None or not user_input.strip():
+                continue
+            command = parse_command(user_input)
             if command["command"] == "exit":
                 print("До свидания!")
                 break
